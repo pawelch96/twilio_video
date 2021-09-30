@@ -8,19 +8,23 @@ class LocalVideoTrack extends VideoTrack {
 
   /// Check if it is enabled.
   ///
-  /// When the value is `false`, blank video frames are sent. When the value is `true`, frames from the [CameraSource] are provided.
+  /// When the value is `false`, blank video frames are sent. When the value is `true`, frames from the [CameraCapturer] are provided.
   @override
   bool get isEnabled => super._enabled;
 
   /// Retrieves the [VideoCapturer].
   VideoCapturer get videoCapturer => _videoCapturer;
 
-  LocalVideoTrack(enabled, this._videoCapturer, {String name = ''}) : super(enabled, name);
+  LocalVideoTrack(enabled, this._videoCapturer, {String name = ''})
+      : super(enabled, name);
 
   /// Construct from a [LocalVideoTrackModel].
   factory LocalVideoTrack._fromModel(LocalVideoTrackModel model) {
-    var videoCapturer = model.cameraCapturer.type == 'CameraCapturer' ? CameraCapturer._fromModel(model.cameraCapturer) : throw Exception('Received unknown VideoCapturer');
-    var localVideoTrack = LocalVideoTrack(model.enabled, videoCapturer, name: model.name);
+    var videoCapturer = model.cameraCapturer.type == 'CameraCapturer'
+        ? CameraCapturer._fromModel(model.cameraCapturer)
+        : throw Exception('Received unknown VideoCapturer');
+    var localVideoTrack =
+        LocalVideoTrack(model.enabled, videoCapturer, name: model.name);
     localVideoTrack._updateFromModel(model);
     return localVideoTrack;
   }
@@ -65,7 +69,8 @@ class LocalVideoTrack extends VideoTrack {
         creationParams: creationParams,
         creationParamsCodec: const StandardMessageCodec(),
         onPlatformViewCreated: (int viewId) {
-          TwilioProgrammableVideo._log('LocalVideoTrack => View created: $viewId, creationParams: $creationParams');
+          TwilioProgrammableVideo._log(
+              'LocalVideoTrack => View created: $viewId, creationParams: $creationParams');
         },
       );
     }
@@ -77,12 +82,14 @@ class LocalVideoTrack extends VideoTrack {
         creationParams: creationParams,
         creationParamsCodec: const StandardMessageCodec(),
         onPlatformViewCreated: (int viewId) {
-          TwilioProgrammableVideo._log('LocalVideoTrack => View created: $viewId, creationParams: $creationParams');
+          TwilioProgrammableVideo._log(
+              'LocalVideoTrack => View created: $viewId, creationParams: $creationParams');
         },
       );
     }
 
-    throw Exception('No widget implementation found for platform \'${Platform.operatingSystem}\'');
+    throw Exception(
+        'No widget implementation found for platform \'${Platform.operatingSystem}\'');
   }
 
   /// Create [LocalVideoTrackModel] from properties.
@@ -91,7 +98,8 @@ class LocalVideoTrack extends VideoTrack {
     return LocalVideoTrackModel(
       enabled: _enabled,
       name: name,
-      cameraCapturer: CameraCapturerModel(cameraCapturer.cameraSource, 'CameraCapturer'),
+      cameraCapturer:
+          CameraCapturerModel(cameraCapturer.source, 'CameraCapturer'),
     );
   }
 }

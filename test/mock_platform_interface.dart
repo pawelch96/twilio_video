@@ -37,7 +37,8 @@ class MockInterface extends ProgrammableVideoPlatform {
 
   @override
   Stream<BaseCameraEvent>? cameraStream() {
-    return Stream<BaseCameraEvent>.periodic(Duration(seconds: 1), (x) => SkipableCameraEvent());
+    return Stream<BaseCameraEvent>.periodic(
+        Duration(seconds: 1), (x) => SkipableCameraEvent());
   }
 
   @override
@@ -101,15 +102,10 @@ class MockInterface extends ProgrammableVideoPlatform {
   }
 
   @override
-  Future<CameraSource> switchCamera() async {
+  Future<CameraSource> switchCamera(CameraSource newSource) async {
     switchCameraWasCalled = true;
-    return Future.delayed(Duration(milliseconds: 1), () => CameraSource.FRONT_CAMERA);
-  }
-
-  @override
-  Future<bool> hasTorch() async {
-    hasTorchWasCalled = true;
-    return Future.delayed(Duration(milliseconds: 1), () => true);
+    return Future.delayed(Duration(milliseconds: 1),
+        () => CameraSource('FRONT_CAMERA', false, false, false));
   }
 
   @override
@@ -129,27 +125,33 @@ class MockInterface extends ProgrammableVideoPlatform {
     return _roomController.stream;
   }
 
-  final _localParticipantController = StreamController<BaseLocalParticipantEvent>();
+  final _localParticipantController =
+      StreamController<BaseLocalParticipantEvent>();
 
-  void addLocalParticipantEvent(BaseLocalParticipantEvent event) => _localParticipantController.sink.add(event);
+  void addLocalParticipantEvent(BaseLocalParticipantEvent event) =>
+      _localParticipantController.sink.add(event);
 
   @override
   Stream<BaseLocalParticipantEvent> localParticipantStream(int internalId) {
     return _localParticipantController.stream;
   }
 
-  final _remoteParticipantController = StreamController<BaseRemoteParticipantEvent>();
+  final _remoteParticipantController =
+      StreamController<BaseRemoteParticipantEvent>();
 
-  void addRemoteParticipantEvent(BaseRemoteParticipantEvent event) => _remoteParticipantController.sink.add(event);
+  void addRemoteParticipantEvent(BaseRemoteParticipantEvent event) =>
+      _remoteParticipantController.sink.add(event);
 
   @override
   Stream<BaseRemoteParticipantEvent> remoteParticipantStream(int internalId) {
     return _remoteParticipantController.stream;
   }
 
-  final _remoteDataTrackController = StreamController<BaseRemoteDataTrackEvent>();
+  final _remoteDataTrackController =
+      StreamController<BaseRemoteDataTrackEvent>();
 
-  void addRemoteDataTrackEvent(BaseRemoteDataTrackEvent event) => _remoteDataTrackController.sink.add(event);
+  void addRemoteDataTrackEvent(BaseRemoteDataTrackEvent event) =>
+      _remoteDataTrackController.sink.add(event);
 
   @override
   Stream<BaseRemoteDataTrackEvent> remoteDataTrackStream(int internalId) {

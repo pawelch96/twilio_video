@@ -35,8 +35,10 @@ class ModelInstances {
 
   static const twilioExceptionModel = TwilioExceptionModel(1, 'test');
 
-  static const localAudioTrackModel = LocalAudioTrackModel(name: 'name', enabled: true);
-  static const localAudioTrackPublicationModel = LocalAudioTrackPublicationModel(
+  static const localAudioTrackModel =
+      LocalAudioTrackModel(name: 'name', enabled: true);
+  static const localAudioTrackPublicationModel =
+      LocalAudioTrackPublicationModel(
     sid: 'sid',
     localAudioTrack: localAudioTrackModel,
   );
@@ -58,10 +60,12 @@ class ModelInstances {
   static const localVideoTrackModel = LocalVideoTrackModel(
     name: 'name',
     enabled: true,
-    cameraCapturer: CameraCapturerModel(CameraSource.FRONT_CAMERA, 'CameraCapturer'),
+    cameraCapturer: CameraCapturerModel(
+        CameraSource('FRONT_CAMERA', false, false, false), 'CameraCapturer'),
   );
 
-  static const localVideoTrackPublicationModel = LocalVideoTrackPublicationModel(
+  static const localVideoTrackPublicationModel =
+      LocalVideoTrackPublicationModel(
     sid: 'sid',
     localVideoTrack: localVideoTrackModel,
   );
@@ -72,7 +76,8 @@ class ModelInstances {
     sid: 'sid',
   );
 
-  static const remoteAudioTrackPublicationModel = RemoteAudioTrackPublicationModel(
+  static const remoteAudioTrackPublicationModel =
+      RemoteAudioTrackPublicationModel(
     subscribed: false,
     enabled: false,
     sid: 'sid',
@@ -90,7 +95,8 @@ class ModelInstances {
     sid: 'sid',
   );
 
-  static const remoteDataTrackPublicationModel = RemoteDataTrackPublicationModel(
+  static const remoteDataTrackPublicationModel =
+      RemoteDataTrackPublicationModel(
     subscribed: true,
     enabled: false,
     name: 'name',
@@ -104,7 +110,8 @@ class ModelInstances {
     sid: 'sid',
   );
 
-  static const remoteVideoTrackPublicationModel = RemoteVideoTrackPublicationModel(
+  static const remoteVideoTrackPublicationModel =
+      RemoteVideoTrackPublicationModel(
     sid: 'sid',
     name: 'name',
     enabled: true,

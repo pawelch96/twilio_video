@@ -12,7 +12,8 @@ import android.media.AudioManager
 import android.os.Build
 import androidx.annotation.NonNull
 import com.twilio.video.AudioCodec
-import com.twilio.video.AspectRatio
+import com.twilio.video.Camera2Capturer
+import com.twilio.video.CameraCapturer
 import com.twilio.video.ConnectOptions
 import com.twilio.video.DataTrackOptions
 import com.twilio.video.G722Codec
@@ -22,6 +23,8 @@ import com.twilio.video.LocalAudioTrack
 import com.twilio.video.LocalDataTrack
 import com.twilio.video.LocalParticipant
 import com.twilio.video.LocalVideoTrack
+import com.twilio.video.VideoFormat
+import com.twilio.video.VideoDimensions
 import com.twilio.video.NetworkQualityConfiguration
 import com.twilio.video.NetworkQualityVerbosity
 import com.twilio.video.OpusCodec
@@ -32,9 +35,6 @@ import com.twilio.video.RemoteParticipant
 import com.twilio.video.VideoCodec
 import com.twilio.video.Vp8Codec
 import com.twilio.video.Vp9Codec
-import com.twilio.video.VideoDimensions
-import com.twilio.video.VideoFormat
-import com.twilio.video.VideoConstraints
 import io.flutter.embedding.engine.plugins.activity.ActivityAware
 import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding
 import io.flutter.plugin.common.MethodCall
@@ -112,19 +112,31 @@ class PluginHandler : MethodCallHandler, ActivityAware, BaseListener {
             "RemoteAudioTrack#enablePlayback" -> remoteAudioTrackEnable(call, result)
             "RemoteAudioTrack#isPlaybackEnabled" -> isRemoteAudioTrackPlaybackEnabled(call, result)
             "CameraCapturer#switchCamera" -> switchCamera(call, result)
-            "CameraCapturer#hasTorch" -> hasTorch(result)
             "CameraCapturer#setTorch" -> setTorch(call, result)
+            "CameraSource#getSources" -> getSources(call, result)
             else -> result.notImplemented()
         }
     }
 
-    private fun switchCamera(call: MethodCall, result: MethodChannel.Result) {
-        TwilioProgrammableVideoPlugin.debug("PluginHandler.switchCamera => called")
-        VideoCapturerHandler.switchCamera(call, result)
+    private fun getSources(call: MethodCall, result: MethodChannel.Result) {
+        TwilioProgrammableVideoPlugin.debug("PluginHandler.getSources => called")
+        return result.success(TwilioProgrammableVideoPlugin.cameraEnumerator.deviceNames.map {
+            VideoCapturerHandler.cameraIdToMap(it)
+        })
     }
 
-    private fun hasTorch(result: MethodChannel.Result) {
-        VideoCapturerHandler.hasTorch(result)
+    private fun switchCamera(call: MethodCall, result: MethodChannel.Result) {
+        TwilioProgrammableVideoPlugin.debug("PluginHandler.switchCamera => called")
+        val newCameraId = call.argument<String>("cameraId")
+                ?: return result.error("MISSING_PARAMS", "The parameter 'cameraId' was not given", null)
+
+        val capturer = TwilioProgrammableVideoPlugin.cameraCapturer
+        if (capturer is Camera2Capturer)
+            capturer.switchCamera(newCameraId)
+        else if (capturer is CameraCapturer)
+            capturer.switchCamera(newCameraId)
+
+        return result.success(VideoCapturerHandler.videoCapturerToMap(TwilioProgrammableVideoPlugin.cameraCapturer!!, newCameraId))
     }
 
     private fun setTorch(call: MethodCall, result: MethodChannel.Result) {
@@ -217,12 +229,12 @@ class PluginHandler : MethodCallHandler, ActivityAware, BaseListener {
     }
 
     private fun getRemoteAudioTrack(sid: String): RemoteAudioTrackPublication? {
-        val remoteParticipants = TwilioProgrammableVideoPlugin.roomListener?.room?.remoteParticipants
+        val remoteParticipants = TwilioProgrammableVideoPlugin.roomListener.room?.remoteParticipants
             ?: return null
 
-        var remoteAudioTrack: RemoteAudioTrackPublication? = null
+        var remoteAudioTrack: RemoteAudioTrackPublication?
         for (remoteParticipant in remoteParticipants) {
-            remoteAudioTrack = remoteParticipant.remoteAudioTracks.firstOrNull { it.trackSid.equals(sid) }
+            remoteAudioTrack = remoteParticipant.remoteAudioTracks.firstOrNull { it.trackSid == sid }
             if (remoteAudioTrack != null) return remoteAudioTrack
         }
         return null
@@ -237,7 +249,7 @@ class PluginHandler : MethodCallHandler, ActivityAware, BaseListener {
     }
 
     private fun getSpeakerphoneOn(result: MethodChannel.Result) {
-        return result.success(audioManager.isSpeakerphoneOn())
+        return result.success(audioManager.isSpeakerphoneOn)
     }
 
     /*
@@ -397,22 +409,15 @@ class PluginHandler : MethodCallHandler, ActivityAware, BaseListener {
                     videoTrack as Map<*, *> // Ensure right type.
                     val videoCapturerMap = videoTrack["videoCapturer"] as Map<*, *>
 
-                    if ((videoCapturerMap["type"] as String).equals("CameraCapturer")) {
+                    if ((videoCapturerMap["type"] as String) == "CameraCapturer") {
                         VideoCapturerHandler.initializeCapturer(videoCapturerMap, result)
                     } else {
                         return result.error("INIT_ERROR", "VideoCapturer type ${videoCapturerMap["type"]} not yet supported.", null)
                     }
 
                     if (TwilioProgrammableVideoPlugin.cameraCapturer != null) {
-                        val videoConstraints: VideoConstraints = VideoConstraints.Builder()
-                            .aspectRatio(AspectRatio.ASPECT_RATIO_16_9)
-                            .maxFps(60)
-                            .minFps(20)
-                            .maxVideoDimensions(VideoDimensions(2560, 1440))
-                            .minVideoDimensions(VideoDimensions.HD_1080P_VIDEO_DIMENSIONS)
-                            .build()
-                        
-                        videoTracks.add(LocalVideoTrack.create(this.applicationContext, videoTrack["enable"] as Boolean, TwilioProgrammableVideoPlugin.cameraCapturer, videoConstraints, videoTrack["name"] as String))
+                        val videoFormat: VideoFormat = VideoFormat(VideoDimensions.HD_1080P_VIDEO_DIMENSIONS, 30)
+                        videoTracks.add(LocalVideoTrack.create(this.applicationContext, videoTrack["enable"] as Boolean, TwilioProgrammableVideoPlugin.cameraCapturer!!, videoFormat, videoTrack["name"] as String))
                     }
                 }
                 TwilioProgrammableVideoPlugin.debug("PluginHandler.connect => setting videoTracks to '${videoTracks.joinToString(", ")}'")
@@ -498,7 +503,7 @@ class PluginHandler : MethodCallHandler, ActivityAware, BaseListener {
             } else if (audioFocusRequest != null) {
                 audioManager.abandonAudioFocusRequest(audioFocusRequest!!)
             }
-            audioManager.setSpeakerphoneOn(false)
+            audioManager.isSpeakerphoneOn = false
             audioManager.mode = previousAudioMode
             audioManager.isMicrophoneMute = previousMicrophoneMute
             this.activity?.volumeControlStream = previousVolumeControlStream
