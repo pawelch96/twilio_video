@@ -335,10 +335,10 @@ class PluginHandler : MethodCallHandler, ActivityAware, BaseListener {
                 val videoCodecs = ArrayList<VideoCodec>()
                 for ((videoCodec) in preferredVideoCodecs) {
                     when (videoCodec) {
-                        Vp8Codec.NAME -> videoCodecs.add(Vp8Codec()) // TODO(WLFN): It has an optional parameter, need to figure out for what: https://github.com/twilio/video-quickstart-android/blob/master/quickstartKotlin/src/main/java/com/twilio/video/quickstart/kotlin/VideoActivity.kt#L106
+                        Vp8Codec.NAME -> videoCodecs.add(Vp8Codec(true)) // TODO(WLFN): It has an optional parameter, need to figure out for what: https://github.com/twilio/video-quickstart-android/blob/master/quickstartKotlin/src/main/java/com/twilio/video/quickstart/kotlin/VideoActivity.kt#L106
                         Vp9Codec.NAME -> videoCodecs.add(Vp9Codec())
                         H264Codec.NAME -> videoCodecs.add(H264Codec())
-                        else -> videoCodecs.add(Vp8Codec())
+                        else -> videoCodecs.add(Vp8Codec(true))
                     }
                 }
                 TwilioProgrammableVideoPlugin.debug("PluginHandler.connect => setting videoCodecs to '${videoCodecs.joinToString(", ")}'")
